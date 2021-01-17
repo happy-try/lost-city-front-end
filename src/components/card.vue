@@ -1,7 +1,12 @@
 <template>
-  <div class="card" :style="{ backgroundColor: color }">
-    {{ value }}
+  <div class="card" :style="{ backgroundColor: color }" @click="trigger" :class="showClass">
+    {{ value === 0 ? "投" : value }}
   </div>
+
+  <!-- <a-tag :color="color">
+    <span class="card">{{ value }}</span>
+  </a-tag> -->
+
 </template>
 
 <script>
@@ -9,9 +14,14 @@ export default {
   name: 'Card',
   data() {
     return {
+      selected: false
     }
   },
   props: {
+    id: {
+      require: true,
+      type: String
+    },
     value: {
       require: true,
       type: Number
@@ -23,16 +33,32 @@ export default {
     type: {
       require: true,
       type: String
+    },
+    isHand: {
+      type: Boolean,
+      default: false
+    },
+    selectedHandCardId: {
+      type: String
     }
   },
+  emits: [
+    'trigger'
+  ],
   computed: {
     isNormal() {
       return this.type === "normal"
+    },
+    showClass() {
+      return this.selectedHandCardId === this.id ? "card-selected" : ""
     }
   },
   methods: {
-    xx() {
-
+    trigger() {
+      // 手牌点击了才有效果
+      if (this.isHand) {
+        this.$emit('trigger', !this.selected, this.id)
+      }
     }
   }
 }
@@ -40,11 +66,16 @@ export default {
 
 <style scoped>
   .card {
-    width: 80px;
+    width: 70px;
     padding: 24px;
-    margin: 0 10px;
+    margin-right: -10px;
     /* height: 100px; */
     display: inline-block;
-    border: 2px;
+    /* border: 2px; */
+    border-radius: 50%;
+  }
+
+  .card-selected {
+    border: 2px solid blue;
   }
 </style>

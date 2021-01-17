@@ -3,7 +3,10 @@ import App from './App.vue'
 
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
+
 import ActionCableVue from 'actioncable-vue'
+
+import router from './router/index.js'
 
 const actionCableVueOptions = {
   debug: true,
@@ -15,4 +18,5 @@ const actionCableVueOptions = {
 createApp(App)
   .use(Antd)
   .use(ActionCableVue, actionCableVueOptions)
+  .use(router)
   .mount('#app')
