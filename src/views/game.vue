@@ -1,55 +1,69 @@
 <template>
-  <div v-if="initDone" class="game-content">
-    <a-row>
-      <a-col :span="10"></a-col>
-      <a-col :span="4">
-        <div class="c-name">
-          牌堆:
-        </div>
-        <a-button type="dashed" ghost style="width: 60px; margin-left: -10px;" @click="toPick(false)">
-          {{ leaveCount }}
-        </a-button>
-      </a-col>
-       <a-col :span="10"></a-col>
-    </a-row>
+  <div>
+    <div>{{room}}:{{currentPlayer}}</div>
+    <div v-if="initDone" class="game-content">
+      <a-row>
+        <a-col :span="10">
+          <div v-if="nextPlayer === 'player_ping'">
+            轮到{{ players[0] }}，{{ nextActionText }}
+          </div>
+        </a-col>
+        <a-col :span="4">
+          <div class="c-name">
+            牌堆:
+          </div>
+          <a-button type="dashed" ghost style="width: 60px; margin-left: -10px;" @click="toPick(false)">
+            {{ leaveCount }}
+          </a-button>
+        </a-col>
+        <a-col :span="10">
+          <div v-if="nextPlayer === 'player_pong'">
+            轮到{{ players[1] }}，{{ nextActionText }}
+          </div>
+        </a-col>
+      </a-row>
 
-    <City v-for="city in cities"
-      :key="city.name"
-      :name="city.name"
-      :color="city.color"
-      :playPing="citiesStatus[city.name][playPing]"
-      :playPong="citiesStatus[city.name][playPong]"
-      :recycleBin="citiesStatus[city.name]['recycle_bin']"
-      @pickCard="toPick"
-    >
-    </City>
+      <City v-for="city in cities"
+        :key="city.name"
+        :name="city.name"
+        :color="city.color"
+        :playPing="citiesStatus[city.name]['player_ping']"
+        :playPong="citiesStatus[city.name]['player_pong']"
+        :recycleBin="citiesStatus[city.name]['recycle_bin']"
+        @pickCard="toPick"
+      >
+      </City>
 
-    <a-divider> 以下为手牌： </a-divider>
+      <a-divider> 以下为手牌： </a-divider>
 
-    <a-row>
-      <a-col :span="16">
-        <Card v-for="card in handCards"
-          :key="card.id"
-          :id="card.id"
-          :color="card.color"
-          :type="card.type"
-          :value="card.value"
-          :city="card.city"
-          :isHand="true"
-          :selectedHandCardId="selectedHandCardId"
-          @trigger="triggerHandCard"
-        >
-        </Card>
-      </a-col>
-      <a-col :span="4">
-        <a-button size="large" @click="toPlay" style="margin-right: 20px;">打出</a-button>
-        <a-button type="danger" size="large" @click="toThrowAway">丢弃</a-button>
-      </a-col>
-    </a-row>
+      <a-row>
+        <a-col :span="16">
+          <Card v-for="card in handCards"
+            :key="card.id"
+            :id="card.id"
+            :color="card.color"
+            :type="card.type"
+            :value="card.value"
+            :city="card.city"
+            :isHand="true"
+            :selectedHandCardId="selectedHandCardId"
+            @trigger="triggerHandCard"
+          >
+          </Card>
+        </a-col>
+        <a-col :span="4">
+          <a-button size="large" @click="toPlay" style="margin-right: 20px;">打出</a-button>
+          <a-button type="danger" size="large" @click="toThrowAway">丢弃</a-button>
+        </a-col>
+      </a-row>
+    </div>
+
+    <a-spin v-if="waitting" />
   </div>
 </template>
 
 <script>
+import { Base64 } from 'js-base64'
 import City from '../components/city'
 import Card from '../components/card'
 import { message } from 'ant-design-vue'
@@ -63,8 +77,8 @@ export default {
   data() {
     return {
       initDone: false,
-      roomKey: "FoTuRF6f",
-      currentPlayer: "xiaodong",
+      room: "",
+      currentPlayer: "",
       players: [],
       playPing: "",
       playPong: "",
@@ -104,15 +118,18 @@ export default {
       handCards: [],
       leaveCount: 0,
       selectedHandCard: {},
-      selectedHandCardId: ''
+      selectedHandCardId: "",
+      nextPlayer: "",
+      nextAction: "",
+      waitting: false // 等待中
     }
   },
   channels: {
     GameChannel: {
       connected() {
         console.info("connected...")
-        this.fetchCurrent()
-        this.initDone = true
+        this.intoRoom()
+        // this.initDone = true
       },
       rejected() {
         console.info("rejected...")
@@ -123,15 +140,23 @@ export default {
           case 'fetch_current':
             this.handleData(data, () => {
               this.players = data.players
-              this.playPing = this.players[0]
-              this.playPong = this.players[1]
+              this.playPing = data.players[0]
+              this.playPong = data.players[1]
               this.handCards = data.hand_cards
               this.cities = data.cities
               this.citiesStatus = data.cities_status
               this.leaveCount = data.leave_count
+              this.nextPlayer = data.next_player
+              this.nextAction = data.next_action
+              this.initDone = true
+              this.waitting = false
             })
             break;
-
+          case 'waitting':
+            this.waitting = true
+            break
+          case 'game_over':
+            break;
           default:
             break;
         }
@@ -142,12 +167,20 @@ export default {
     }
   },
   mounted() {
+    console.info(this.$route.query)
+    this.room = Base64.decode(unescape(this.$route.query.room))
+    this.currentPlayer = Base64.decode(unescape(this.$route.query.player))
+
     this.$cable.subscribe({
       channel: 'GameChannel',
-      room: 'FoTuRF6f'
+      room: this.room,
+      player: this.currentPlayer
     });
   },
   computed: {
+    nextActionText() {
+      return this.nextAction === "pick_card" ? "从弃牌堆 / 剩余牌堆选择一张" : "从手牌打出一张牌"
+    }
   },
   methods: {
     toPlay() {
@@ -169,10 +202,8 @@ export default {
         this.selectedHandCardId = ''
       }
     },
-    fetchCurrent() {
-      this.basePerform('fetch_current', {
-        player: this.currentPlayer
-      })
+    intoRoom() {
+      this.basePerform('into_room')
     },
     pushCard(throwAway) {
       this.$cable.perform({

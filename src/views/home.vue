@@ -7,7 +7,7 @@
       <a-col :span="8">
         <div>
           <a-input
-            v-model:value="roomKey"
+            v-model:value="room"
             placeholder="请输入关键词，用于创建房间"
             allow-clear
           />
@@ -40,11 +40,11 @@ export default {
   setup() {
     const router = useRouter()
 
-    const roomKey = ref("")
+    const room = ref("")
     const player = ref("")
 
     const toRoom = () => {
-      if (!roomKey.value || !player.value) {
+      if (!room.value || !player.value) {
         message.error("把框填全啊....", 2)
         return
       }
@@ -52,14 +52,14 @@ export default {
       router.push({
         name: 'game',
         query: {
-          room: Base64.encode(roomKey.value),
-          player: Base64.encode(player.value)
+          room: escape(Base64.encode(room.value)),
+          player: escape(Base64.encode(player.value))
         }
       })
     }
 
     return {
-      roomKey,
+      room,
       player,
       toRoom
     }
