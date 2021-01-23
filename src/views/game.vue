@@ -1,23 +1,36 @@
 <template>
   <div>
-    <div>{{room}}:{{currentPlayer}}</div>
+    <div class="header">
+      <a-row>
+        <a-col :span="4">
+          <a-button size="large" @click="showRule" style="margin-right: 20px;">查看规则</a-button>
+        </a-col>
+        <a-col :span="20">
+          <RecentOperation :operation="recentOperation"></RecentOperation>
+        </a-col>
+      </a-row>
+    </div>
+
+    <a-divider> 以下为展示区： </a-divider>
+
+    <!-- <div style="">{{room}}:{{currentPlayer}}</div> -->
     <div v-if="initDone" class="game-content">
       <a-row>
         <a-col :span="10">
-          <div v-if="nextPlayer === 'player_ping'">
+          <div v-if="nextPlayer === 'player_ping'" style="background-color: #79cece; padding: 20px;">
             轮到{{ players[0] }}，{{ nextActionText }}
           </div>
         </a-col>
         <a-col :span="4">
           <div class="c-name">
-            牌堆:
+            <span style="font-size: 18px;">牌堆:</span>
           </div>
           <a-button type="dashed" ghost style="width: 60px; margin-left: -10px;" @click="toPick(false)">
-            {{ leaveCount }}
+            <span style="font-size: 18px;">{{ leaveCount }}</span>
           </a-button>
         </a-col>
         <a-col :span="10">
-          <div v-if="nextPlayer === 'player_pong'">
+          <div v-if="nextPlayer === 'player_pong'" style="background-color: #79cece; padding: 20px;">
             轮到{{ players[1] }}，{{ nextActionText }}
           </div>
         </a-col>
@@ -27,8 +40,8 @@
         :key="city.name"
         :name="city.name"
         :color="city.color"
-        :playPing="citiesStatus[city.name]['player_ping']"
-        :playPong="citiesStatus[city.name]['player_pong']"
+        :playerPing="citiesStatus[city.name]['player_ping']"
+        :playerPong="citiesStatus[city.name]['player_pong']"
         :recycleBin="citiesStatus[city.name]['recycle_bin']"
         @pickCard="toPick"
       >
@@ -59,6 +72,29 @@
     </div>
 
     <a-spin v-if="waitting" />
+    <a-modal v-model:visible="finished" title="游戏结束，比分如下：" :maskClosable="false" :footer="null" :bodyStyle="{padding: '48px', textAlign: 'center', 'fontSize': '28px'}">
+      <a-row>
+        <a-col style="font-size: 10px;" :span="8">
+          <span>「{{ players[0] }}」</span>
+        </a-col>
+        <a-col :span="8">
+        </a-col>
+        <a-col style="font-size: 12px;" :span="8">
+          <span>「{{ players[1] }}」</span>
+        </a-col>
+      </a-row>
+      <a-row>
+        <a-col :span="8">
+          <span>{{ playerScore.playerPing }}</span>
+        </a-col>
+        <a-col :span="8">
+          vs
+        </a-col>
+        <a-col :span="8">
+          <span>{{ playerScore.playerPong }}</span>
+        </a-col>
+      </a-row>
+    </a-modal>
   </div>
 </template>
 
@@ -66,13 +102,17 @@
 import { Base64 } from 'js-base64'
 import City from '../components/city'
 import Card from '../components/card'
-import { message } from 'ant-design-vue'
+import RecentOperation from '../components/recentOperation'
+import { notification, Modal } from 'ant-design-vue'
+import { h } from 'vue'
+import { computeScore } from '../utils/game'
 
 export default {
   name: 'Game',
   components: {
     City,
-    Card
+    Card,
+    RecentOperation
   },
   data() {
     return {
@@ -80,40 +120,9 @@ export default {
       room: "",
       currentPlayer: "",
       players: [],
-      playPing: "",
-      playPong: "",
-      cities: [
-        {
-          name: '金字塔',
-          color: 'yellow',
-          queueOne: [ { value: 2, color: 'yellow', type: 'normal', belong: '金字塔' }],
-          queueTwo: [ { value: 5, color: 'yellow', type: 'normal', belong: '金字塔' }, { value: 7, color: 'yellow', type: 'normal', belong: '金字塔' }]
-        },
-        {
-          name: '亚马逊雨林',
-          color: 'green',
-          queueOne: [ { value: 2, color: 'green', type: 'normal' }, { value: '投资', color: 'green', type: 'normal' }],
-          queueTwo: [ { value: 5, color: 'green', type: 'normal' }, { value: 7, color: 'green', type: 'normal' }]
-        },
-        {
-          name: '撒哈拉沙漠',
-          color: 'red',
-          queueOne: [ { value: 2, color: 'red', type: 'normal' }],
-          queueTwo: [ { value: 5, color: 'red', type: 'normal' }, { value: 7, color: 'red', type: 'normal' }]
-        },
-        {
-          name: '喜马拉雅山',
-          color: 'yellow',
-          queueOne: [ { value: 2, color: 'yellow', type: 'normal' }],
-          queueTwo: [ { value: 5, color: 'yellow', type: 'normal' }, { value: 7, color: 'yellow', type: 'normal' }]
-        },
-        {
-          name: '西伯利亚',
-          color: 'green',
-          queueOne: [ { value: 2, color: 'green', type: 'normal' }],
-          queueTwo: [ { value: 5, color: 'green', type: 'normal' }, { value: 7, color: 'green', type: 'normal' }]
-        }
-      ],
+      playerPing: "",
+      playerPong: "",
+      cities: [],
       citiesStatus: {},
       handCards: [],
       leaveCount: 0,
@@ -121,7 +130,9 @@ export default {
       selectedHandCardId: "",
       nextPlayer: "",
       nextAction: "",
-      waitting: false // 等待中
+      recentOperation: {},
+      waitting: false, // 等待中
+      finished: false // 是否结束
     }
   },
   channels: {
@@ -129,7 +140,6 @@ export default {
       connected() {
         console.info("connected...")
         this.intoRoom()
-        // this.initDone = true
       },
       rejected() {
         console.info("rejected...")
@@ -140,8 +150,8 @@ export default {
           case 'fetch_current':
             this.handleData(data, () => {
               this.players = data.players
-              this.playPing = data.players[0]
-              this.playPong = data.players[1]
+              this.playerPing = data.players[0]
+              this.playerPong = data.players[1]
               this.handCards = data.hand_cards
               this.cities = data.cities
               this.citiesStatus = data.cities_status
@@ -156,6 +166,7 @@ export default {
             this.waitting = true
             break
           case 'game_over':
+            this.finished = true
             break;
           default:
             break;
@@ -180,9 +191,41 @@ export default {
   computed: {
     nextActionText() {
       return this.nextAction === "pick_card" ? "从弃牌堆 / 剩余牌堆选择一张" : "从手牌打出一张牌"
+    },
+    playerScore() {
+      // 计分
+      let playerPingScore = 0
+      let playerPongScore = 0
+
+      Object.keys(this.citiesStatus).forEach(city => {
+        playerPingScore += computeScore(this.citiesStatus[city].player_ping)
+        playerPongScore += computeScore(this.citiesStatus[city].player_pong)
+      })
+
+      return {
+        playerPing: playerPingScore,
+        playerPong: playerPongScore
+      }
     }
   },
   methods: {
+    showRule() {
+      Modal.info({
+        title: '规则说明',
+        content: h('div', {}, [
+          h('p', '● 45 张远征卡：5种颜色各9张，数字2~10'),
+          h('p', '● 15 张投资卡：5种颜色各3张'),
+          h('p', '出牌，有2种选择:'),
+          h('p', '● 将一张牌打到对应区域（对应颜色），不能比上一张牌的点数小（也就是递增），用于计分'),
+          h('p', '● 或者，将一张牌丢到对应区域弃牌堆，不做计分'),
+          h('p', '抽牌，有2种选择'),
+          h('p', '● 从对应区域的弃牌堆里拿回一张牌。'),
+          h('p', '● 或者，从剩余的牌组里拿回一张牌。'),
+          h('a', { href: 'https://blog.xuite.net/tacox0127/rx002/21740127-%5B%E8%A6%8F%E5%89%87%5D+%E5%A4%B1%E8%90%BD%E5%9F%8E%E5%B8%82+Lost+Cities', target: '_blank' }, '详细规则' )
+        ]),
+        onOk() {},
+      })
+    },
     toPlay() {
       // 选择牌投资到对应的城市
       this.pushCard(false)
@@ -210,7 +253,6 @@ export default {
         channel: 'GameChannel',
         action: 'push_card',
         data: {
-          player: this.currentPlayer,
           card_id: this.selectedHandCardId,
           throw_away: throwAway
         }
@@ -222,7 +264,6 @@ export default {
         channel: 'GameChannel',
         action: 'pick_card',
         data: {
-          player: this.currentPlayer,
           if_from_city: isFromCity,
           city: city
         }
@@ -237,9 +278,30 @@ export default {
     },
     handleData(data, successHandler) {
       if (data.error_code > 10000) {
-        message.error(data.error_msg, 2)
+        // message.error(data.error_msg, 2)
+        notification.open({
+          message: '操作提示',
+          description: data.error_msg,
+          duration: 3,
+          placement: 'topRight'
+        })
       } else {
         successHandler()
+
+        if (!data.recent_operation || Object.keys(data.recent_operation) === 0) {
+          return
+        }
+
+        this.recentOperation = data.recent_operation
+
+        // notification.open({
+        //   message: '操作提示',
+        //   description: h('div', {}, [
+        //     h(RecentOperation, { operation: data.recent_operation }),
+        //   ]),
+        //   duration: 3,
+        //   placement: 'topLeft'
+        // })
       }
     }
   }
@@ -247,6 +309,10 @@ export default {
 </script>
 
 <style>
+  .header {
+    margin: 20px;
+    height: 100px;
+  }
   .game-content {
     padding: 10px;
     font-weight: bold;

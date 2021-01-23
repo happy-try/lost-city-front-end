@@ -12,6 +12,7 @@ const actionCableVueOptions = {
   debug: true,
   debugLevel: 'error',
   connectionUrl: 'ws://192.168.31.32:3000/cable',
+  // connectionUrl: 'ws://lost.thjyx.com/cable',
   connectImmediately: true
 }
 

@@ -68,5 +68,8 @@ export default {
 </script>
 
 <style>
-
+  body {
+    background-color: burlywood;
+    height: 100%;
+  }
 </style>

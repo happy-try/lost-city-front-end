@@ -1,5 +1,5 @@
 <template>
-  <div class="card" :style="{ backgroundColor: color }" @click="trigger" :class="showClass">
+  <div class="card" :style="{ backgroundColor: color, display: 'inline-block' }" @click="trigger" :class="showClass">
     {{ value === 0 ? "投" : value }}
   </div>
 

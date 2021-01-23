@@ -1,33 +1,49 @@
 <template>
   <div style="margin-bottom: 10px">
     <a-row>
-      <a-col :span="10">
-        <Card v-for="card in playPing"
-          :id="card.id"
-          :key="card.value"
-          :color="card.color"
-          :type="card.type"
-          :value="card.value"
-        >
-        </Card>
+      <a-col :span="2">
+        <div v-show="playerPingScore !== 0" class="c-name">
+          {{ playerPingScore }}
+        </div>
+      </a-col>
+      <a-col :span="8">
+        <a-row type="flex" justify="end">
+          <a-col :span="4" v-for="card in playerPingShow" :key="card.value">
+            <Card
+              :id="card.id"
+              :color="card.color"
+              :type="card.type"
+              :value="card.value"
+            >
+            </Card>
+          </a-col>
+        </a-row>
       </a-col>
       <a-col :span="4">
         <div class="c-name" :style="{ backgroundColor: color }">
-          {{ name }}
+          <span style="font-size: 18px;">{{ name }}</span>
         </div>
         <a-button type="dashed" ghost style="width: 60px; margin-left: -10px;" @click="toPick">
-          {{ showLastInrecycleBin }}
+          <span style="font-size: 18px;">{{ showLastInrecycleBin }}</span>
         </a-button>
       </a-col>
-      <a-col :span="10">
-        <Card v-for="card in playPong"
-          :id="card.id"
-          :key="card.value"
-          :color="card.color"
-          :type="card.type"
-          :value="card.value"
-        >
-        </Card>
+      <a-col :span="8">
+        <a-row type="flex" justify="start">
+          <a-col :span="4" v-for="card in playerPong" :key="card.value">
+            <Card
+              :id="card.id"
+              :color="card.color"
+              :type="card.type"
+              :value="card.value"
+            >
+            </Card>
+          </a-col>
+        </a-row>
+      </a-col>
+      <a-col :span="2">
+        <div v-show="playerPongScore !== 0" class="c-name">
+          {{ playerPongScore }}
+        </div>
       </a-col>
     </a-row>
   </div>
@@ -35,6 +51,7 @@
 
 <script>
 import Card from './card'
+import { computeScore } from '../utils/game'
 
 export default {
   name: 'City',
@@ -54,12 +71,12 @@ export default {
       require: true,
       type: String
     },
-    playPing: {
+    playerPing: {
       default: () => {
         return []
       }
     },
-    playPong: {
+    playerPong: {
       default: () => {
         return []
       }
@@ -76,14 +93,20 @@ export default {
     },
     showLastInrecycleBin() {
       return this.lastInrecycleBin ? (this.lastInrecycleBin.value === 0 ? '投' : this.lastInrecycleBin.value) : '空'
+    },
+    playerPingScore() {
+      return computeScore(this.playerPing)
+    },
+    playerPongScore() {
+      return computeScore(this.playerPong)
+    },
+    playerPingShow() {
+      // 左边选手的牌需要反向排序
+      let reverseplayerPing = JSON.parse(JSON.stringify(this.playerPing))
+      return reverseplayerPing.reverse()
     }
   },
   methods: {
-    playerPing() {
-
-    },
-    playerPong() {
-    },
     toPick() {
       this.$emit('pickCard', true, this.name)
     }
