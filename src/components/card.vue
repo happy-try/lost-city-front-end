@@ -1,12 +1,7 @@
 <template>
-  <div class="card" :style="{ backgroundColor: color, display: 'inline-block' }" @click="trigger" :class="showClass">
+  <div class="card" :style="{ backgroundColor: color }" @click="trigger" :class="showClass">
     {{ value === 0 ? "投" : value }}
   </div>
-
-  <!-- <a-tag :color="color">
-    <span class="card">{{ value }}</span>
-  </a-tag> -->
-
 </template>
 
 <script>
@@ -68,11 +63,12 @@ export default {
   .card {
     width: 70px;
     padding: 24px;
-    margin-right: -10px;
+    /* margin-right: -10px; */
     /* height: 100px; */
     display: inline-block;
     /* border: 2px; */
     border-radius: 50%;
+    text-align: center;
   }
 
   .card-selected {

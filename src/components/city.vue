@@ -7,7 +7,19 @@
         </div>
       </a-col>
       <a-col :span="8">
-        <a-row type="flex" justify="end">
+        <div style="text-align: right;">
+          <Card
+            v-for="card in playerPingShow"
+            :key="card.value"
+            :id="card.id"
+            :color="card.color"
+            :type="card.type"
+            :value="card.value"
+          >
+          </Card>
+        </div>
+
+        <!-- <a-row type="flex" justify="end">
           <a-col :span="4" v-for="card in playerPingShow" :key="card.value">
             <Card
               :id="card.id"
@@ -17,7 +29,7 @@
             >
             </Card>
           </a-col>
-        </a-row>
+        </a-row> -->
       </a-col>
       <a-col :span="4">
         <div class="c-name" :style="{ backgroundColor: color }">
@@ -28,7 +40,18 @@
         </a-button>
       </a-col>
       <a-col :span="8">
-        <a-row type="flex" justify="start">
+        <div style="text-align: left;">
+          <Card
+            v-for="card in playerPong"
+            :key="card.value"
+            :id="card.id"
+            :color="card.color"
+            :type="card.type"
+            :value="card.value"
+          >
+          </Card>
+        </div>
+        <!-- <a-row type="flex" justify="start">
           <a-col :span="4" v-for="card in playerPong" :key="card.value">
             <Card
               :id="card.id"
@@ -38,7 +61,7 @@
             >
             </Card>
           </a-col>
-        </a-row>
+        </a-row> -->
       </a-col>
       <a-col :span="2">
         <div v-show="playerPongScore !== 0" class="c-name">
@@ -117,7 +140,6 @@ export default {
 <style scoped>
   .c-name {
     padding: 24px;
-    display: inline-block;
     width: 140px;
   }
 </style>

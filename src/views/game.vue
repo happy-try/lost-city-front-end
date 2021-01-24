@@ -4,6 +4,7 @@
       <a-row>
         <a-col :span="4">
           <a-button size="large" @click="showRule" style="margin-right: 20px;">查看规则</a-button>
+          <a-button size="large" @click="toNewOne" style="margin-right: 20px;">重开一局</a-button>
         </a-col>
         <a-col :span="20">
           <RecentOperation :operation="recentOperation"></RecentOperation>
@@ -72,7 +73,11 @@
     </div>
 
     <a-spin v-if="waitting" />
-    <a-modal v-model:visible="finished" title="游戏结束，比分如下：" :maskClosable="false" :footer="null" :bodyStyle="{padding: '48px', textAlign: 'center', 'fontSize': '28px'}">
+    <a-modal v-model:visible="finished"
+      title="游戏结束，比分如下："
+      :maskClosable="false"
+      :bodyStyle="{ padding: '48px', textAlign: 'center', 'fontSize': '28px' }"
+    >
       <a-row>
         <a-col style="font-size: 10px;" :span="8">
           <span>「{{ players[0] }}」</span>
@@ -94,6 +99,9 @@
           <span>{{ playerScore.playerPong }}</span>
         </a-col>
       </a-row>
+      <template #footer>
+        <a-button size="large" type="primary" @click="toNewOne">再来一局</a-button>
+      </template>
     </a-modal>
   </div>
 </template>
@@ -160,6 +168,7 @@ export default {
               this.nextAction = data.next_action
               this.initDone = true
               this.waitting = false
+              this.finished = data.finished
             })
             break;
           case 'waitting':
@@ -237,6 +246,17 @@ export default {
     toPick(isFromCity, city = '') {
       this.pickCard(isFromCity, city)
     },
+    toNewOne() {
+      this.newOne()
+      this.finished = false
+
+      notification.open({
+          message: '操作提示',
+          description: '游戏已经重开',
+          duration: 5,
+          placement: 'topRight'
+        })
+    },
     triggerHandCard(selected, cardId) {
       // 选中一张手牌时，样式进行变更：上移/下移
       if (selected) {
@@ -267,6 +287,12 @@ export default {
           if_from_city: isFromCity,
           city: city
         }
+      })
+    },
+    newOne() {
+      this.$cable.perform({
+        channel: 'GameChannel',
+        action: 'new_one'
       })
     },
     basePerform(action, data) {
