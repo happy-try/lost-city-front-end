@@ -35,8 +35,8 @@
         <div class="c-name" :style="{ backgroundColor: color }">
           <span style="font-size: 18px;">{{ name }}</span>
         </div>
-        <a-button type="dashed" ghost style="width: 60px; margin-left: -10px;" @click="toPick">
-          <span style="font-size: 18px;">{{ showLastInrecycleBin }}</span>
+        <a-button type="dashed" ghost style="width: 60px; height: 54px; margin-left: -10px;" @click="toPick">
+          <span style="font-size: 24px; padding: 4px 4px;">{{ showLastInrecycleBin }}</span>
         </a-button>
       </a-col>
       <a-col :span="8">
