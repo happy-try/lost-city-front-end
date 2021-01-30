@@ -1,5 +1,5 @@
 <template>
-  <div style="background-color: #79cece; padding: 10px;">
+  <div style="padding: 10px;">
     <div v-if="operation.action === 'pick_card'">
       <div v-if="operation.if_from_city" >
         {{ `${operation.player} 从「弃牌堆」取回了一张` }}

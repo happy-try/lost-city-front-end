@@ -1,28 +1,26 @@
 <template>
   <div>
-    <div class="header">
+    <!-- <div class="header">
       <a-row>
         <a-col :span="4">
           <a-button size="large" @click="showRule" style="margin-right: 20px;">查看规则</a-button>
           <a-button size="large" @click="toNewOne" style="margin-right: 20px;">重开一局</a-button>
         </a-col>
         <a-col :span="20">
-          <RecentOperation :operation="recentOperation"></RecentOperation>
         </a-col>
       </a-row>
-    </div>
+    </div> -->
 
     <a-divider> 以下为展示区： </a-divider>
 
-    <!-- <div style="">{{room}}:{{currentPlayer}}</div> -->
     <div v-if="initDone" class="game-content">
       <a-row>
-        <a-col :span="10">
+        <a-col :span="4">
           <div v-if="nextPlayer === 'player_ping'" style="background-color: #79cece; padding: 20px;">
             轮到{{ players[0] }}，{{ nextActionText }}
           </div>
         </a-col>
-        <a-col :span="4">
+        <a-col :span="4" :offset="6">
           <div class="c-name">
             <span style="font-size: 18px;">牌堆:</span>
           </div>
@@ -30,7 +28,7 @@
             <span style="font-size: 18px;">{{ leaveCount }}</span>
           </a-button>
         </a-col>
-        <a-col :span="10">
+        <a-col :span="4" :offset="6">
           <div v-if="nextPlayer === 'player_pong'" style="background-color: #79cece; padding: 20px;">
             轮到{{ players[1] }}，{{ nextActionText }}
           </div>
@@ -51,6 +49,12 @@
       <a-divider> 以下为手牌： </a-divider>
 
       <a-row>
+        <a-col :span="4">
+          <div>
+            最近操作记录:
+            <RecentOperation :operation="recentOperation"></RecentOperation>
+          </div>
+        </a-col>
         <a-col :span="16">
           <Card v-for="card in handCards"
             :key="card.id"
@@ -328,6 +332,13 @@ export default {
         //   duration: 3,
         //   placement: 'topLeft'
         // })
+
+        // message.info({
+        //   content: h('div', {}, [
+        //     h(RecentOperation, { operation: data.recent_operation }),
+        //   ]),
+        //   duration: 5
+        // })
       }
     }
   }
@@ -336,11 +347,10 @@ export default {
 
 <style>
   .header {
-    margin: 20px;
-    height: 100px;
+    /* margin: 20px; */
   }
   .game-content {
-    padding: 10px;
+    /* padding: 10px; */
     font-weight: bold;
   }
 

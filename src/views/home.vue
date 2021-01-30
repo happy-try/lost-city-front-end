@@ -1,32 +1,30 @@
 <template>
-  <div style="height: 100%;">
-    <a-row type="flex" justify="space-around" align="middle">
-      <a-col :span="8">
-        col-8
-      </a-col>
-      <a-col :span="8">
-        <div>
-          <a-input
-            v-model:value="room"
-            placeholder="请输入关键词，用于创建房间"
-            allow-clear
-          />
+  <a-row type="flex" justify="space-around" align="middle" class="home">
+    <a-col :span="8">
+    </a-col>
+    <a-col :span="8">
+      <div>
+        <a-input
+          v-model:value="room"
+          placeholder="请输入关键词，用于创建房间"
+          allow-clear
+          size="large"
+        />
 
-          <a-input
-            style="margin-top: 10px;"
-            v-model:value="player"
-            placeholder="请输入你的大名"
-            allow-clear
-          />
+        <a-input
+          style="margin-top: 10px;"
+          v-model:value="player"
+          placeholder="请输入你的大名"
+          allow-clear
+          size="large"
+        />
 
-          <a-button size="large" @click="toRoom" style="margin-right: 20px;">进入房间</a-button>
-        </div>
-      </a-col>
-      <a-col :span="8">
-        col-8
-      </a-col>
-    </a-row>
-  </div>
+        <a-button size="large" @click="toRoom" style="margin-top: 20px;">进入房间</a-button>
+      </div>
+    </a-col>
+    <a-col :span="8">
+    </a-col>
+  </a-row>
 </template>
 
 <script>
@@ -70,6 +68,10 @@ export default {
 <style>
   body {
     background-color: burlywood;
-    height: 100%;
+  }
+
+  .home {
+    background-color: burlywood;
+    font-size: 30px;
   }
 </style>
